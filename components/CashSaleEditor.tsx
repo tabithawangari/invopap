@@ -1,0 +1,292 @@
+// components/CashSaleEditor.tsx — Main page orchestrator for Cash Sale document (responsive)
+"use client";
+
+import { useState, useCallback } from "react";
+import Link from "next/link";
+import { useCashSaleStore } from "@/lib/store/cashSaleStore";
+import { useAuth } from "@/lib/hooks/useAuth";
+import { CashSaleForm } from "@/components/CashSaleForm";
+import { CashSalePreview } from "@/components/CashSalePreview";
+import { CashSaleOptionsSidebar } from "@/components/CashSaleOptionsSidebar";
+import { PaymentModal } from "@/components/PaymentModal";
+import { UserNav } from "@/components/UserNav";
+import { DocumentTypeSwitcher } from "@/components/DocumentTypeSwitcher";
+
+export function CashSaleEditor() {
+  const store = useCashSaleStore();
+  const { user, loading: authLoading } = useAuth();
+
+  const [activeTab, setActiveTab] = useState<"edit" | "preview">("edit");
+  const [showPayment, setShowPayment] = useState(false);
+  const [showOptions, setShowOptions] = useState(false);
+  const [saving, setSaving] = useState(false);
+
+  // Save cash sale to API, return the publicId
+  const saveCashSale = useCallback(async (): Promise<string | null> => {
+    setSaving(true);
+    try {
+      const payload = {
+        documentTitle: store.documentTitle,
+        cashSaleNumber: store.cashSaleNumber || undefined,
+        issueDate: store.issueDate,
+        orderNumber: store.orderNumber || undefined,
+        referenceInvoiceNumber: store.referenceInvoiceNumber || undefined,
+        paymentMethod: store.paymentMethod,
+        transactionCode: store.transactionCode || undefined,
+        fromName: store.from.name,
+        fromEmail: store.from.email,
+        fromPhone: store.from.phone,
+        fromAddress: store.from.address,
+        fromCity: store.from.city,
+        fromZipCode: store.from.zipCode,
+        fromBusinessNumber: store.from.businessNumber,
+        toName: store.to.name,
+        toEmail: store.to.email,
+        toPhone: store.to.phone,
+        toAddress: store.to.address,
+        toCity: store.to.city,
+        toZipCode: store.to.zipCode,
+        toBusinessNumber: store.to.businessNumber,
+        notes: store.notes,
+        taxRate: store.taxRate,
+        discountType: store.discountType === "percentage" ? "PERCENTAGE" : "FIXED",
+        discountValue: store.discountValue,
+        currency: store.currency.code,
+        accentColor: store.accentColor,
+        logoDataUrl: store.logoDataUrl,
+        signatureDataUrl: store.signatureDataUrl,
+        photoDataUrls: store.photoDataUrls,
+        items: store.items.map((item) => ({
+          description: item.description,
+          additionalDetails: item.additionalDetails,
+          quantity: item.quantity,
+          rate: item.rate,
+        })),
+      };
+
+      let res: Response;
+      if (store.currentCashSaleId) {
+        res = await fetch(`/api/cash-sales/${store.currentCashSaleId}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+      } else {
+        res = await fetch("/api/cash-sales", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+      }
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || "Failed to save cash sale");
+      }
+
+      const data = await res.json();
+      store.setMeta(data.id, data.publicId);
+      if (data.cashSaleNumber) {
+        store.setField("cashSaleNumber", data.cashSaleNumber);
+      }
+
+      return data.publicId;
+    } catch (error) {
+      alert(error instanceof Error ? error.message : "Failed to save");
+      return null;
+    } finally {
+      setSaving(false);
+    }
+  }, [store]);
+
+  const handleDownload = useCallback(async () => {
+    const publicId = store.currentPublicId || (await saveCashSale());
+    if (!publicId) return;
+
+    const res = await fetch(`/api/documents/download-cs/${publicId}`);
+    if (res.ok) {
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${store.cashSaleNumber || "cash-sale"}.pdf`;
+      a.click();
+      URL.revokeObjectURL(url);
+      return;
+    }
+
+    if (res.status === 402) {
+      setShowPayment(true);
+    } else {
+      const err = await res.json().catch(() => ({}));
+      alert(err.error || "Failed to download");
+    }
+  }, [store.currentPublicId, store.cashSaleNumber, saveCashSale]);
+
+  const handlePaymentSuccess = useCallback(() => {
+    setShowPayment(false);
+    if (store.currentPublicId) {
+      const a = document.createElement("a");
+      a.href = `/api/documents/download-cs/${store.currentPublicId}`;
+      a.download = `${store.cashSaleNumber || "cash-sale"}.pdf`;
+      a.click();
+    }
+  }, [store.currentPublicId, store.cashSaleNumber]);
+
+  const handleNew = useCallback(() => {
+    if (confirm("Start a new document? Unsaved changes will be lost.")) {
+      store.reset();
+    }
+  }, [store]);
+
+  return (
+    <div className="min-h-screen bg-mist/30">
+      {/* Top bar */}
+      <header className="sticky top-0 z-30 bg-white/95 backdrop-blur border-b border-mist safe-top">
+        <div className="max-w-[1400px] mx-auto px-3 sm:px-4">
+          <div className="flex items-center justify-between h-12 sm:h-14">
+            <Link href="/" className="text-lg sm:text-xl font-display font-bold text-lagoon shrink-0">
+            Invopap
+          </Link>
+
+          {/* Center: Preview / Edit toggle */}
+          <div className="flex items-center bg-mist/60 rounded-lg p-0.5">
+            <button
+              onClick={() => setActiveTab("preview")}
+              className={`px-3 sm:px-4 py-1.5 text-xs sm:text-sm font-medium rounded-md transition-all ${
+                activeTab === "preview" ? "bg-white text-ink shadow-sm" : "text-ink/50 hover:text-ink/70"
+              }`}
+            >
+              Preview
+            </button>
+            <button
+              onClick={() => setActiveTab("edit")}
+              className={`px-3 sm:px-4 py-1.5 text-xs sm:text-sm font-medium rounded-md transition-all ${
+                activeTab === "edit" ? "bg-white text-ink shadow-sm" : "text-ink/50 hover:text-ink/70"
+              }`}
+            >
+              Edit
+            </button>
+          </div>
+
+          {/* Right: Auth + mobile options toggle */}
+          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+            {!authLoading && (
+              <>
+                {user ? (
+                  <UserNav
+                    user={{
+                      displayName:
+                        user.user_metadata?.full_name ||
+                        user.email?.split("@")[0] ||
+                        "User",
+                      email: user.email || "",
+                      avatarUrl: user.user_metadata?.avatar_url || null,
+                    }}
+                  />
+                ) : (
+                  <div className="hidden sm:flex items-center gap-1">
+                    <Link
+                      href="/auth/login"
+                      className="rounded-lg px-3 py-1.5 text-sm text-ink/60 hover:text-ink hover:bg-mist/50 transition-colors"
+                    >
+                      Sign In
+                    </Link>
+                    <Link
+                      href="/auth/signup"
+                      className="rounded-lg bg-lagoon px-3 py-1.5 text-sm font-medium text-white hover:bg-lagoon/90 transition-colors"
+                    >
+                      Sign Up
+                    </Link>
+                  </div>
+                )}
+              </>
+            )}
+
+            {/* Mobile options toggle */}
+            <button
+              onClick={() => setShowOptions(!showOptions)}
+              className="rounded-lg border border-mist p-2 text-ink/40 hover:text-ink hover:bg-mist/50 transition-colors lg:hidden touch-target flex items-center justify-center"
+              aria-label="Toggle options"
+            >
+              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
+              </svg>
+            </button>
+          </div>
+          </div>
+
+          {/* Row 2: Document Type Selector */}
+          <div className="pb-2 -mx-1">
+            <DocumentTypeSwitcher variant="header" fallbackLabel="Cash Sale" />
+          </div>
+        </div>
+      </header>
+
+      {/* ─── Main content: 2-column layout ─── */}
+      <div className="max-w-[1400px] mx-auto px-3 sm:px-4 py-4 sm:py-6">
+        <div className="flex flex-col lg:flex-row gap-4 sm:gap-6">
+          {/* Left: Form or Preview */}
+          <div className="flex-1 min-w-0">
+            {activeTab === "edit" ? (
+              <div className="bg-white rounded-xl border border-mist shadow-sm p-4 sm:p-6 md:p-8">
+                <CashSaleForm />
+              </div>
+            ) : (
+              <CashSalePreview />
+            )}
+          </div>
+
+          {/* Right: Options sidebar (desktop) */}
+          <div className="hidden lg:block w-64 flex-shrink-0">
+            <div className="sticky top-[7.5rem] space-y-4">
+              <CashSaleOptionsSidebar
+                onDownload={handleDownload}
+                onNew={handleNew}
+                saving={saving}
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* ─── Options drawer (mobile) ─── */}
+      {showOptions && (
+        <div className="fixed inset-0 z-40 lg:hidden">
+          <div
+            className="absolute inset-0 bg-ink/30 animate-[fadeIn_0.2s_ease-out]"
+            onClick={() => setShowOptions(false)}
+          />
+          <div className="absolute bottom-0 left-0 right-0 max-h-[80vh] overflow-y-auto bg-white rounded-t-2xl animate-fadeUp safe-bottom">
+            <div className="sticky top-0 bg-white flex justify-between items-center px-4 py-3 border-b border-mist z-10">
+              <h3 className="font-semibold text-ink">Options</h3>
+              <button
+                onClick={() => setShowOptions(false)}
+                className="text-ink/30 hover:text-ink p-2 -mr-2 touch-target flex items-center justify-center"
+              >
+                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <CashSaleOptionsSidebar
+              onDownload={handleDownload}
+              onNew={handleNew}
+              saving={saving}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* ─── Payment modal ─── */}
+      {showPayment && store.currentPublicId && (
+        <PaymentModal
+          publicId={store.currentPublicId}
+          onClose={() => setShowPayment(false)}
+          onSuccess={handlePaymentSuccess}
+          documentType="CASH_SALE"
+        />
+      )}
+    </div>
+  );
+}

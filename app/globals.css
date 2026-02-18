@@ -1,0 +1,168 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    -webkit-text-size-adjust: 100%;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  body {
+    @apply bg-white text-ink;
+  }
+
+  /* Prevent zoom on input focus for iOS (16px minimum) */
+  @media screen and (max-width: 767px) {
+    input[type="text"],
+    input[type="number"],
+    input[type="email"],
+    input[type="tel"],
+    input[type="date"],
+    input[type="url"],
+    select,
+    textarea {
+      font-size: 16px !important;
+    }
+  }
+
+  /* Scrollbar styling */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-ink/10 rounded-full;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-ink/20;
+  }
+
+  /* Hide scrollbar for horizontal scroll areas */
+  .scrollbar-none::-webkit-scrollbar {
+    display: none;
+  }
+  .scrollbar-none {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+}
+
+@layer components {
+  /* Common input styles — touch-friendly minimum height */
+  .input {
+    @apply w-full rounded-lg border border-mist px-3 py-2.5 text-ink placeholder:text-ink/30 focus:border-lagoon focus:outline-none focus:ring-1 focus:ring-lagoon/30 transition-colors;
+    @apply text-base md:text-sm;
+    min-height: 44px;
+  }
+
+  /* Sidebar-specific input/select styles */
+  .sidebar-select {
+    @apply w-full rounded-lg border border-mist px-3 py-2.5 text-ink focus:border-lagoon focus:outline-none focus:ring-1 focus:ring-lagoon/30;
+    @apply text-base md:text-sm;
+    min-height: 44px;
+  }
+
+  .sidebar-input {
+    @apply w-full rounded-lg border border-mist px-3 py-2.5 text-ink focus:border-lagoon focus:outline-none focus:ring-1 focus:ring-lagoon/30;
+    @apply text-base md:text-sm;
+    min-height: 44px;
+  }
+
+  /* Common label styles */
+  .label {
+    @apply block text-xs font-medium text-ink/50 mb-1;
+  }
+
+  /* Prose overrides for legal pages */
+  .prose h1 {
+    @apply text-3xl font-display font-bold text-ink;
+  }
+
+  .prose h2 {
+    @apply text-xl font-display font-semibold text-ink mt-8 mb-3;
+  }
+
+  .prose h3 {
+    @apply text-lg font-semibold text-ink mt-6 mb-2;
+  }
+
+  .prose p {
+    @apply text-sm text-ink/70 leading-relaxed mb-4;
+  }
+
+  .prose ul, .prose ol {
+    @apply text-sm text-ink/70 leading-relaxed mb-4 pl-6;
+  }
+
+  .prose li {
+    @apply mb-1;
+  }
+
+  .prose a {
+    @apply text-lagoon hover:underline;
+  }
+
+  .prose strong {
+    @apply text-ink font-semibold;
+  }
+}
+
+@layer utilities {
+  .animate-float {
+    animation: float 3s ease-in-out infinite;
+  }
+
+  .animate-fadeUp {
+    animation: fadeUp 0.3s ease-out;
+  }
+
+  /* Safe area padding for notched devices (iPhone X+) */
+  .safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
+  .safe-top {
+    padding-top: env(safe-area-inset-top, 0px);
+  }
+
+  /* Touch-friendly minimum tap target (44px Apple HIG) */
+  .touch-target {
+    min-height: 44px;
+    min-width: 44px;
+  }
+}
+
+/* Keyframes */
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+@keyframes fadeUp {
+  0% {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  0% { opacity: 0; }
+  100% { opacity: 1; }
+}

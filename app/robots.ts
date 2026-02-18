@@ -1,0 +1,15 @@
+// app/robots.ts — Search engine directive
+import type { MetadataRoute } from "next";
+
+export default function robots(): MetadataRoute.Robots {
+  return {
+    rules: [
+      {
+        userAgent: "*",
+        allow: "/",
+        disallow: ["/api/", "/admin/", "/dashboard/", "/auth/"],
+      },
+    ],
+    sitemap: `${process.env.NEXT_PUBLIC_APP_URL || "https://invopap.com"}/sitemap.xml`,
+  };
+}
