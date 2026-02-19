@@ -37,7 +37,11 @@ export async function middleware(request: NextRequest) {
 
       if (origin) {
         const originHost = new URL(origin).host;
-        const expectedHost = appUrl ? new URL(appUrl).host : host;
+        // Normalize appUrl: add https:// if missing a protocol
+        const normalizedAppUrl = appUrl
+          ? appUrl.includes("://") ? appUrl : `https://${appUrl}`
+          : null;
+        const expectedHost = normalizedAppUrl ? new URL(normalizedAppUrl).host : host;
 
         if (originHost !== expectedHost) {
           return NextResponse.json(
