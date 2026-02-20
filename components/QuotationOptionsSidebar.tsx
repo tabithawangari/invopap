@@ -3,6 +3,7 @@
 
 import { useQuotationStore, ACCENT_COLORS } from "@/lib/store/quotationStore";
 import { CURRENCIES } from "@/lib/utils/format";
+import { DocumentTypeSwitcher } from "@/components/DocumentTypeSwitcher";
 
 export interface QuotationOptionsSidebarProps {
   onDownload: () => void;
@@ -54,16 +55,21 @@ export function QuotationOptionsSidebar({
 
       <hr className="border-mist" />
 
+      {/* ─── Document Type ─── */}
+      <DocumentTypeSwitcher variant="sidebar" fallbackLabel="Quotation" />
+
+      <hr className="border-mist" />
+
       {/* ─── Accent Color ─── */}
       <Section title="Template">
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-1">
           {ACCENT_COLORS.map((color) => (
             <button
               key={color}
               onClick={() => setAccentColor(color)}
-              className={`h-8 w-8 sm:h-7 sm:w-7 rounded-full border-2 transition-all touch-target flex items-center justify-center ${
+              className={`h-4 w-4 sm:h-3.5 sm:w-3.5 rounded-full border transition-all flex items-center justify-center ${
                 accentColor === color
-                  ? "border-ink scale-110 ring-2 ring-offset-2 ring-ink/10"
+                  ? "border-ink scale-110 ring-1 ring-offset-1 ring-ink/20"
                   : "border-transparent hover:scale-105"
               }`}
               style={{ backgroundColor: color }}
@@ -97,7 +103,7 @@ export function QuotationOptionsSidebar({
           <select
             value={discountType}
             onChange={(e) => setField("discountType", e.target.value)}
-            className="sidebar-select"
+            className="sidebar-select w-20 flex-shrink-0"
           >
             <option value="percentage">%</option>
             <option value="fixed">Fixed</option>
@@ -111,7 +117,7 @@ export function QuotationOptionsSidebar({
               setField("discountValue", parseFloat(e.target.value) || 0)
             }
             placeholder="0"
-            className="flex-1 sidebar-input"
+            className="flex-1 min-w-0 sidebar-input"
           />
         </div>
       </Section>

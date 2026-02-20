@@ -1,7 +1,7 @@
 // components/DocumentTypeSwitcher.tsx — Shared doc-type switcher (header pills or sidebar select)
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef, memo } from "react";
 import { useRouter, usePathname } from "next/navigation";
 
 interface DocTypeLink {
@@ -19,6 +19,9 @@ const DOC_TYPE_LINKS: DocTypeLink[] = [
   { label: "Receipt", shortLabel: "Receipt", href: "/receipt" },
 ];
 
+// Track prefetched paths globally to avoid duplicate prefetches across instances
+const prefetchedPaths = new Set<string>();
+
 interface DocumentTypeSwitcherProps {
   /** Fallback label when pathname doesn't match any doc type */
   fallbackLabel?: string;
@@ -26,20 +29,25 @@ interface DocumentTypeSwitcherProps {
   variant?: "header" | "sidebar";
 }
 
-export function DocumentTypeSwitcher({
+export const DocumentTypeSwitcher = memo(function DocumentTypeSwitcher({
   fallbackLabel = "Invoice",
   variant = "sidebar",
 }: DocumentTypeSwitcherProps) {
   const pathname = usePathname();
   const router = useRouter();
+  const hasPrefetched = useRef(false);
 
   const currentType =
     DOC_TYPE_LINKS.find((dt) => dt.href === pathname)?.label || fallbackLabel;
 
-  // Prefetch all document routes on mount so switching is near-instant
+  // Prefetch document routes once per session (not per mount)
   useEffect(() => {
+    if (hasPrefetched.current) return;
+    hasPrefetched.current = true;
+    
     DOC_TYPE_LINKS.forEach((dt) => {
-      if (dt.href !== pathname) {
+      if (dt.href !== pathname && !prefetchedPaths.has(dt.href)) {
+        prefetchedPaths.add(dt.href);
         router.prefetch(dt.href);
       }
     });
@@ -94,4 +102,4 @@ export function DocumentTypeSwitcher({
       ))}
     </select>
   );
-}
+});

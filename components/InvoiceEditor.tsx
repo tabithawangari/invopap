@@ -189,7 +189,7 @@ export function InvoiceEditor() {
                       }}
                     />
                   ) : (
-                    <div className="hidden sm:flex items-center gap-1">
+                    <div className="flex items-center gap-1">
                       <Link
                         href="/auth/login"
                         className="rounded-lg px-3 py-1.5 text-sm text-ink/60 hover:text-ink hover:bg-mist/50 transition-colors"
@@ -206,22 +206,7 @@ export function InvoiceEditor() {
                   )}
                 </>
               )}
-
-              <button
-                onClick={() => setShowOptions(!showOptions)}
-                className="rounded-lg border border-mist p-2 text-ink/40 hover:text-ink hover:bg-mist/50 transition-colors lg:hidden touch-target flex items-center justify-center"
-                aria-label="Toggle options"
-              >
-                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
-                </svg>
-              </button>
             </div>
-          </div>
-
-          {/* Row 2: Document Type Selector */}
-          <div className="pb-2 -mx-1">
-            <DocumentTypeSwitcher variant="header" fallbackLabel="Invoice" />
           </div>
         </div>
       </header>
@@ -234,6 +219,23 @@ export function InvoiceEditor() {
             {activeTab === "edit" ? (
               <div className="bg-white rounded-xl border border-mist shadow-sm p-4 sm:p-6 md:p-8">
                 <InvoiceForm />
+                {/* Mobile download button */}
+                <div className="mt-6 pt-6 border-t border-mist lg:hidden">
+                  <button
+                    onClick={handleDownload}
+                    disabled={saving}
+                    className="w-full rounded-lg bg-ember px-4 py-3 text-sm font-medium text-white hover:bg-ember/90 transition-colors flex items-center justify-center gap-2"
+                  >
+                    {saving ? (
+                      <div className="h-4 w-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    ) : (
+                      <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                      </svg>
+                    )}
+                    Download PDF
+                  </button>
+                </div>
               </div>
             ) : (
               <InvoicePreview />
@@ -242,7 +244,7 @@ export function InvoiceEditor() {
 
           {/* Options sidebar (desktop) */}
           <div className="hidden lg:block w-64 flex-shrink-0">
-            <div className="sticky top-[7.5rem] space-y-4">
+            <div className="sticky top-20">
               <OptionsSidebar
                 onDownload={handleDownload}
                 onNew={handleNew}
@@ -252,6 +254,17 @@ export function InvoiceEditor() {
           </div>
         </div>
       </div>
+
+      {/* ─── Floating options button (mobile/tablet) ─── */}
+      <button
+        onClick={() => setShowOptions(!showOptions)}
+        className="fixed right-4 top-1/2 -translate-y-1/2 z-30 lg:hidden rounded-full bg-lagoon p-3 text-white shadow-lg hover:bg-lagoon/90 transition-colors"
+        aria-label="Toggle options"
+      >
+        <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
+        </svg>
+      </button>
 
       {/* ─── Options drawer (mobile/tablet) ─── */}
       {showOptions && (
