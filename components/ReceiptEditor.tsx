@@ -21,7 +21,21 @@ export function ReceiptEditor() {
   const [showOptions, setShowOptions] = useState(false);
   const [saving, setSaving] = useState(false);
 
+  // Validate required fields before save
+  const validateForm = useCallback((): string | null => {
+    if (!store.from.name.trim()) return "Please enter the receiver's name (From)";
+    if (!store.to.name.trim()) return "Please enter the payer's name (To)";
+    return null;
+  }, [store.from.name, store.to.name]);
+
   const saveReceipt = useCallback(async (): Promise<string | null> => {
+    // Client-side validation
+    const validationError = validateForm();
+    if (validationError) {
+      alert(validationError);
+      return null;
+    }
+
     setSaving(true);
     try {
       // Helper to convert empty strings to undefined (for optional fields)
@@ -93,7 +107,7 @@ export function ReceiptEditor() {
     } finally {
       setSaving(false);
     }
-  }, [store]);
+  }, [store, validateForm]);
 
   const handleDownload = useCallback(async () => {
     // Force save if form was modified to create a new unpaid document

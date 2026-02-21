@@ -21,8 +21,24 @@ export function QuotationEditor() {
   const [showOptions, setShowOptions] = useState(false);
   const [saving, setSaving] = useState(false);
 
+  // Validate required fields before save
+  const validateForm = useCallback((): string | null => {
+    if (!store.from.name.trim()) return "Please enter the sender's name (From)";
+    if (!store.to.name.trim()) return "Please enter the recipient's name (To)";
+    const hasValidItem = store.items.some((item) => item.description.trim());
+    if (!hasValidItem) return "Please add at least one item with a description";
+    return null;
+  }, [store.from.name, store.to.name, store.items]);
+
   // Save quotation to API, return the publicId
   const saveQuotation = useCallback(async (): Promise<string | null> => {
+    // Client-side validation
+    const validationError = validateForm();
+    if (validationError) {
+      alert(validationError);
+      return null;
+    }
+
     setSaving(true);
     try {
       // Helper to convert empty strings to undefined (for optional fields)
@@ -97,7 +113,7 @@ export function QuotationEditor() {
     } finally {
       setSaving(false);
     }
-  }, [store]);
+  }, [store, validateForm]);
 
   // Download PDF button handler
   const handleDownload = useCallback(async () => {
