@@ -25,27 +25,30 @@ export function QuotationEditor() {
   const saveQuotation = useCallback(async (): Promise<string | null> => {
     setSaving(true);
     try {
+      // Helper to convert empty strings to undefined (for optional fields)
+      const emptyToUndef = (val: string | null | undefined) => val?.trim() || undefined;
+
       const payload = {
         documentTitle: store.documentTitle,
         quotationNumber: store.quotationNumber || undefined,
         quotationDate: store.quotationDate,
         validUntil: store.validUntil || undefined,
         fromName: store.from.name,
-        fromEmail: store.from.email,
-        fromPhone: store.from.phone,
-        fromAddress: store.from.address,
-        fromCity: store.from.city,
-        fromZipCode: store.from.zipCode,
-        fromBusinessNumber: store.from.businessNumber,
+        fromEmail: emptyToUndef(store.from.email),
+        fromPhone: emptyToUndef(store.from.phone),
+        fromAddress: emptyToUndef(store.from.address),
+        fromCity: emptyToUndef(store.from.city),
+        fromZipCode: emptyToUndef(store.from.zipCode),
+        fromBusinessNumber: emptyToUndef(store.from.businessNumber),
         toName: store.to.name,
-        toEmail: store.to.email,
-        toPhone: store.to.phone,
-        toAddress: store.to.address,
-        toCity: store.to.city,
-        toZipCode: store.to.zipCode,
-        toBusinessNumber: store.to.businessNumber,
-        termsAndConditions: store.termsAndConditions,
-        notes: store.notes,
+        toEmail: emptyToUndef(store.to.email),
+        toPhone: emptyToUndef(store.to.phone),
+        toAddress: emptyToUndef(store.to.address),
+        toCity: emptyToUndef(store.to.city),
+        toZipCode: emptyToUndef(store.to.zipCode),
+        toBusinessNumber: emptyToUndef(store.to.businessNumber),
+        termsAndConditions: emptyToUndef(store.termsAndConditions),
+        notes: emptyToUndef(store.notes),
         discountType: store.discountType,
         discountValue: store.discountValue,
         currency: store.currency.code,
@@ -55,7 +58,7 @@ export function QuotationEditor() {
         photoDataUrls: store.photoDataUrls,
         items: store.items.map((item) => ({
           description: item.description,
-          additionalDetails: item.additionalDetails,
+          additionalDetails: emptyToUndef(item.additionalDetails),
           quantity: item.quantity,
           rate: item.rate,
         })),

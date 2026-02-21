@@ -24,6 +24,9 @@ export function DeliveryNoteEditor() {
   const saveDeliveryNote = useCallback(async (): Promise<string | null> => {
     setSaving(true);
     try {
+      // Helper to convert empty strings to undefined (for optional fields)
+      const emptyToUndef = (val: string | null | undefined) => val?.trim() || undefined;
+
       const payload = {
         documentTitle: store.documentTitle,
         deliveryNoteNumber: store.deliveryNoteNumber || undefined,
@@ -31,28 +34,28 @@ export function DeliveryNoteEditor() {
         orderNumber: store.orderNumber || undefined,
         referenceInvoiceNumber: store.referenceInvoiceNumber || undefined,
         fromName: store.from.name,
-        fromEmail: store.from.email,
-        fromPhone: store.from.phone,
-        fromAddress: store.from.address,
-        fromCity: store.from.city,
-        fromZipCode: store.from.zipCode,
-        fromBusinessNumber: store.from.businessNumber,
+        fromEmail: emptyToUndef(store.from.email),
+        fromPhone: emptyToUndef(store.from.phone),
+        fromAddress: emptyToUndef(store.from.address),
+        fromCity: emptyToUndef(store.from.city),
+        fromZipCode: emptyToUndef(store.from.zipCode),
+        fromBusinessNumber: emptyToUndef(store.from.businessNumber),
         toName: store.to.name,
-        toEmail: store.to.email,
-        toPhone: store.to.phone,
-        toAddress: store.to.address,
-        toCity: store.to.city,
-        toZipCode: store.to.zipCode,
-        toBusinessNumber: store.to.businessNumber,
-        acknowledgmentText: store.acknowledgmentText,
-        notes: store.notes,
+        toEmail: emptyToUndef(store.to.email),
+        toPhone: emptyToUndef(store.to.phone),
+        toAddress: emptyToUndef(store.to.address),
+        toCity: emptyToUndef(store.to.city),
+        toZipCode: emptyToUndef(store.to.zipCode),
+        toBusinessNumber: emptyToUndef(store.to.businessNumber),
+        acknowledgmentText: emptyToUndef(store.acknowledgmentText),
+        notes: emptyToUndef(store.notes),
         accentColor: store.accentColor,
         logoDataUrl: store.logoDataUrl,
         signatureDataUrl: store.signatureDataUrl,
         photoDataUrls: store.photoDataUrls,
         items: store.items.map((item) => ({
           description: item.description,
-          additionalDetails: item.additionalDetails,
+          additionalDetails: emptyToUndef(item.additionalDetails),
           quantity: item.quantity,
         })),
       };

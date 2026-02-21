@@ -25,6 +25,9 @@ export function CashSaleEditor() {
   const saveCashSale = useCallback(async (): Promise<string | null> => {
     setSaving(true);
     try {
+      // Helper to convert empty strings to undefined (for optional fields)
+      const emptyToUndef = (val: string | null | undefined) => val?.trim() || undefined;
+
       const payload = {
         documentTitle: store.documentTitle,
         cashSaleNumber: store.cashSaleNumber || undefined,
@@ -34,20 +37,20 @@ export function CashSaleEditor() {
         paymentMethod: store.paymentMethod,
         transactionCode: store.transactionCode || undefined,
         fromName: store.from.name,
-        fromEmail: store.from.email,
-        fromPhone: store.from.phone,
-        fromAddress: store.from.address,
-        fromCity: store.from.city,
-        fromZipCode: store.from.zipCode,
-        fromBusinessNumber: store.from.businessNumber,
+        fromEmail: emptyToUndef(store.from.email),
+        fromPhone: emptyToUndef(store.from.phone),
+        fromAddress: emptyToUndef(store.from.address),
+        fromCity: emptyToUndef(store.from.city),
+        fromZipCode: emptyToUndef(store.from.zipCode),
+        fromBusinessNumber: emptyToUndef(store.from.businessNumber),
         toName: store.to.name,
-        toEmail: store.to.email,
-        toPhone: store.to.phone,
-        toAddress: store.to.address,
-        toCity: store.to.city,
-        toZipCode: store.to.zipCode,
-        toBusinessNumber: store.to.businessNumber,
-        notes: store.notes,
+        toEmail: emptyToUndef(store.to.email),
+        toPhone: emptyToUndef(store.to.phone),
+        toAddress: emptyToUndef(store.to.address),
+        toCity: emptyToUndef(store.to.city),
+        toZipCode: emptyToUndef(store.to.zipCode),
+        toBusinessNumber: emptyToUndef(store.to.businessNumber),
+        notes: emptyToUndef(store.notes),
         taxRate: store.taxRate,
         discountType: store.discountType === "percentage" ? "PERCENTAGE" : "FIXED",
         discountValue: store.discountValue,
@@ -58,7 +61,7 @@ export function CashSaleEditor() {
         photoDataUrls: store.photoDataUrls,
         items: store.items.map((item) => ({
           description: item.description,
-          additionalDetails: item.additionalDetails,
+          additionalDetails: emptyToUndef(item.additionalDetails),
           quantity: item.quantity,
           rate: item.rate,
         })),
