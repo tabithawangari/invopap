@@ -10,83 +10,124 @@ export default function TermsPage() {
   return (
     <article className="prose prose-slate max-w-none">
       <h1>Terms of Service</h1>
-      <p className="text-sm text-ink/50">Last updated: {new Date().toLocaleDateString("en-KE")}</p>
 
       <h2>1. Acceptance of Terms</h2>
       <p>
-        By accessing or using Invopap (&quot;the Service&quot;), you agree to be bound by
-        these Terms of Service. If you do not agree, do not use the Service.
+        Welcome to Invopap (&quot;the Service&quot;). By accessing or using the Service, you
+        agree to be bound by these Terms of Service. If you do not agree with
+        any part of these terms, you must not use the Service.
       </p>
 
       <h2>2. Service Description</h2>
       <p>
-        Invopap is a document generation platform that allows users to create
-        invoices, receipts, estimates, and quotes. Users can create documents
-        without an account (as guests) or sign up for a persistent account.
+        Invopap is a document generation platform designed to allow users to
+        create professional invoices, receipts, estimates, and quotes. The
+        Service provides flexibility by allowing users to create documents
+        without an account (as guests) or to sign up for a persistent, registered
+        account to manage their documents over time.
       </p>
 
-      <h2>3. Pricing</h2>
+      <h2>3. Account Registration and Guest Mode</h2>
       <p>
-        Creating and previewing documents is free. Downloading a clean PDF
-        (without watermark) requires a one-time payment of <strong>KSh 10</strong>{" "}
-        per document via M-Pesa. This fee is charged to the document creator,
-        not the invoice recipient.
+        <strong>Guest Access:</strong> You may use the Service to generate
+        documents without creating an account. Please note that guest session
+        data is temporary and may be permanently deleted after 90 days of
+        inactivity.
       </p>
-
-      <h2>4. Payments</h2>
       <p>
-        All payments are processed via Safaricom M-Pesa. By completing a
-        payment, you agree to Safaricom&apos;s terms of service. Payment is
-        non-refundable once a PDF has been downloaded (see our Refund Policy).
+        <strong>Registered Accounts:</strong> Signing up for a persistent account
+        allows you to save and manage your documents long-term. You agree to
+        provide accurate information during registration and are responsible for
+        maintaining the security of your account credentials.
       </p>
 
-      <h2>5. User Content</h2>
+      <h2>4. Pricing</h2>
       <p>
-        You retain ownership of all content you enter into documents (business
-        names, amounts, images, etc.). By using the Service, you grant Invopap a
-        limited license to store and process this content solely for the purpose
-        of generating your documents.
+        <strong>Free Features:</strong> Creating, editing, and previewing
+        documents on the platform is completely free.
+      </p>
+      <p>
+        <strong>Premium Downloads:</strong> Downloading a clean, final PDF
+        document (without the Invopap watermark) requires a one-time payment of
+        <strong> KSh 10 per document</strong>.
+      </p>
+      <p>
+        <strong>Billing Responsibility:</strong> This fee is charged strictly to
+        the document creator. The recipient of your invoice, receipt, estimate,
+        or quote will never be charged by Invopap to view or receive the
+        document.
       </p>
 
-      <h2>6. Prohibited Use</h2>
+      <h2>5. Payments and Refunds</h2>
+      <p>
+        <strong>Payment Processor:</strong> All payments are processed securely
+        via Safaricom M-Pesa. By completing a payment on Invopap, you also agree
+        to be bound by Safaricom&apos;s terms of service.
+      </p>
+      <p>
+        <strong>Refund Policy:</strong> Because the digital product is delivered
+        instantly, payments are strictly non-refundable once a clean PDF has been
+        successfully generated and downloaded. Attempting to circumvent payment
+        requirements is strictly prohibited.
+      </p>
+
+      <h2>6. User Content and Data Ownership</h2>
+      <p>
+        You retain full ownership of all content you enter into your documents,
+        including business names, financial amounts, client details, logos, and
+        images. By using the Service, you grant Invopap a limited,
+        non-exclusive license to store, process, and display this content solely
+        for the purpose of generating and delivering your documents.
+      </p>
+
+      <h2>7. Prohibited Use</h2>
+      <p>To ensure a safe and reliable platform, you agree not to use the Service
+        for any of the following activities:</p>
       <ul>
-        <li>Creating fraudulent or misleading documents</li>
-        <li>Automated/bot access without prior written consent</li>
-        <li>Attempting to circumvent payment requirements</li>
-        <li>Uploading illegal or harmful content</li>
-        <li>Interfering with the Service&apos;s infrastructure</li>
+        <li>Creating fraudulent, misleading, or illegal documents (including tax evasion)</li>
+        <li>Accessing the platform via automated scripts, scrapers, or bots without our prior written consent</li>
+        <li>Attempting to bypass, hack, or circumvent the KSh 10 payment requirement</li>
+        <li>Uploading illegal, offensive, or harmful content</li>
+        <li>Interfering with, disrupting, or attempting to gain unauthorized access to the Service&apos;s infrastructure or servers</li>
       </ul>
 
-      <h2>7. Account Termination</h2>
+      <h2>8. Account Termination and Suspension</h2>
       <p>
-        We reserve the right to suspend or terminate accounts that violate these
-        terms. Guest session data may be deleted after 90 days of inactivity.
+        We reserve the right to suspend or terminate your account or block your
+        access to the Service immediately, without prior notice, if you violate
+        any of these Terms of Service.
       </p>
 
-      <h2>8. Limitation of Liability</h2>
+      <h2>9. Limitation of Liability</h2>
       <p>
-        Invopap is provided &quot;as is&quot; without warranty. We are not liable for any
-        business decisions made based on documents generated using the Service.
-        Our maximum liability is limited to the amount paid by you in the
-        preceding 12 months.
+        The Service is provided on an &quot;as is&quot; and &quot;as available&quot; basis without
+        warranties of any kind, whether express or implied.
+      </p>
+      <p>
+        Invopap is not a specialized accounting or legal firm. We are not liable
+        for any business, financial, or tax decisions made based on the documents
+        generated using our Service.
+      </p>
+      <p>
+        In no event shall Invopap&apos;s total maximum liability to you for any claims
+        arising out of your use of the Service exceed the total amount paid by
+        you to Invopap in the preceding 12 months.
       </p>
 
-      <h2>9. Governing Law</h2>
+      <h2>10. Governing Law and Dispute Resolution</h2>
       <p>
-        These terms are governed by the laws of the Republic of Kenya. Any
-        disputes shall be resolved in the courts of Nairobi, Kenya.
+        These Terms of Service shall be governed by and construed in accordance
+        with the laws of the Republic of Kenya. Any disputes arising out of or
+        relating to these terms or your use of the Service shall be resolved
+        exclusively in the courts located in Nairobi, Kenya.
       </p>
 
-      <h2>10. Changes to Terms</h2>
+      <h2>11. Changes to Terms</h2>
       <p>
-        We may update these terms from time to time. Continued use of the
-        Service constitutes acceptance of the updated terms.
-      </p>
-
-      <h2>Contact</h2>
-      <p>
-        For questions about these terms, contact us at{" "}
-        <a href="mailto:legal@invopap.com">legal@invopap.com</a>.
+        We may update these terms from time to time to reflect changes to our
+        Service or for legal reasons. We will post the updated terms on this
+        page. Your continued use of the Service after any changes constitutes
+        your acceptance of the new Terms of Service.
       </p>
     </article>
   );
