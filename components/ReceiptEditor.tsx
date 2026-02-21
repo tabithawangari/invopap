@@ -96,7 +96,10 @@ export function ReceiptEditor() {
   }, [store]);
 
   const handleDownload = useCallback(async () => {
-    const publicId = store.currentPublicId || (await saveReceipt());
+    // Force save if form was modified to create a new unpaid document
+    const publicId = (store.isDirty || !store.currentPublicId)
+      ? (await saveReceipt())
+      : store.currentPublicId;
     if (!publicId) return;
 
     const res = await fetch(`/api/documents/download-receipt/${publicId}`);
@@ -117,7 +120,7 @@ export function ReceiptEditor() {
       const err = await res.json().catch(() => ({}));
       alert(err.error || "Failed to download");
     }
-  }, [store.currentPublicId, store.receiptNumber, saveReceipt]);
+  }, [store.currentPublicId, store.isDirty, store.receiptNumber, saveReceipt]);
 
   const handlePaymentSuccess = useCallback(() => {
     setShowPayment(false);

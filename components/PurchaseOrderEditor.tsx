@@ -108,7 +108,10 @@ export function PurchaseOrderEditor() {
   }, [store]);
 
   const handleDownload = useCallback(async () => {
-    const publicId = store.currentPublicId || (await savePurchaseOrder());
+    // Force save if form was modified to create a new unpaid document
+    const publicId = (store.isDirty || !store.currentPublicId)
+      ? (await savePurchaseOrder())
+      : store.currentPublicId;
     if (!publicId) return;
 
     const res = await fetch(`/api/documents/download-po/${publicId}`);
@@ -129,7 +132,7 @@ export function PurchaseOrderEditor() {
       const err = await res.json().catch(() => ({}));
       alert(err.error || "Failed to download");
     }
-  }, [store.currentPublicId, store.purchaseOrderNumber, savePurchaseOrder]);
+  }, [store.currentPublicId, store.isDirty, store.purchaseOrderNumber, savePurchaseOrder]);
 
   const handlePaymentSuccess = useCallback(() => {
     setShowPayment(false);

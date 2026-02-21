@@ -96,7 +96,10 @@ export function DeliveryNoteEditor() {
   }, [store]);
 
   const handleDownload = useCallback(async () => {
-    const publicId = store.currentPublicId || (await saveDeliveryNote());
+    // Force save if form was modified to create a new unpaid document
+    const publicId = (store.isDirty || !store.currentPublicId)
+      ? (await saveDeliveryNote())
+      : store.currentPublicId;
     if (!publicId) return;
 
     const res = await fetch(`/api/documents/download-dn/${publicId}`);
@@ -117,7 +120,7 @@ export function DeliveryNoteEditor() {
       const err = await res.json().catch(() => ({}));
       alert(err.error || "Failed to download");
     }
-  }, [store.currentPublicId, store.deliveryNoteNumber, saveDeliveryNote]);
+  }, [store.currentPublicId, store.isDirty, store.deliveryNoteNumber, saveDeliveryNote]);
 
   const handlePaymentSuccess = useCallback(() => {
     setShowPayment(false);

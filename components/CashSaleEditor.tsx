@@ -103,7 +103,10 @@ export function CashSaleEditor() {
   }, [store]);
 
   const handleDownload = useCallback(async () => {
-    const publicId = store.currentPublicId || (await saveCashSale());
+    // Force save if form was modified to create a new unpaid document
+    const publicId = (store.isDirty || !store.currentPublicId)
+      ? (await saveCashSale())
+      : store.currentPublicId;
     if (!publicId) return;
 
     const res = await fetch(`/api/documents/download-cs/${publicId}`);
@@ -124,7 +127,7 @@ export function CashSaleEditor() {
       const err = await res.json().catch(() => ({}));
       alert(err.error || "Failed to download");
     }
-  }, [store.currentPublicId, store.cashSaleNumber, saveCashSale]);
+  }, [store.currentPublicId, store.isDirty, store.cashSaleNumber, saveCashSale]);
 
   const handlePaymentSuccess = useCallback(() => {
     setShowPayment(false);

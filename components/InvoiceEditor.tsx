@@ -102,7 +102,10 @@ export function InvoiceEditor() {
   }, [store]);
 
   const handleDownload = useCallback(async () => {
-    const publicId = store.currentPublicId || (await saveInvoice());
+    // Force save if form was modified to create a new unpaid document
+    const publicId = (store.isDirty || !store.currentPublicId)
+      ? (await saveInvoice())
+      : store.currentPublicId;
     if (!publicId) return;
 
     const res = await fetch(`/api/documents/download/${publicId}`);
@@ -123,7 +126,7 @@ export function InvoiceEditor() {
       const err = await res.json().catch(() => ({}));
       alert(err.error || "Failed to download");
     }
-  }, [store.currentPublicId, store.invoiceNumber, saveInvoice]);
+  }, [store.currentPublicId, store.isDirty, store.invoiceNumber, saveInvoice]);
 
   const handleNew = useCallback(() => {
     if (confirm("Start a new document? Unsaved changes will be lost.")) {

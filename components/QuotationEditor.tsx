@@ -101,7 +101,10 @@ export function QuotationEditor() {
 
   // Download PDF button handler
   const handleDownload = useCallback(async () => {
-    const publicId = store.currentPublicId || (await saveQuotation());
+    // Force save if form was modified to create a new unpaid document
+    const publicId = (store.isDirty || !store.currentPublicId)
+      ? (await saveQuotation())
+      : store.currentPublicId;
     if (!publicId) return;
 
     const res = await fetch(`/api/documents/download-quotation/${publicId}`);
@@ -122,7 +125,7 @@ export function QuotationEditor() {
       const err = await res.json().catch(() => ({}));
       alert(err.error || "Failed to download");
     }
-  }, [store.currentPublicId, store.quotationNumber, saveQuotation]);
+  }, [store.currentPublicId, store.isDirty, store.quotationNumber, saveQuotation]);
 
   // Payment success → trigger download
   const handlePaymentSuccess = useCallback(() => {
