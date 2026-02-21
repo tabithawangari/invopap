@@ -30,11 +30,11 @@ export function InvoiceEditor() {
 
       const payload = {
         documentTitle: store.documentTitle,
-        documentType: store.documentType,
+        documentType: store.documentType.toUpperCase(),
         invoiceNumber: store.invoiceNumber || undefined,
         issueDate: store.issueDate,
         dueDate: store.dueDate || undefined,
-        paymentTerms: store.paymentTerms,
+        paymentTerms: store.paymentTerms.toUpperCase(),
         fromName: store.from.name,
         fromEmail: emptyToUndef(store.from.email),
         fromPhone: emptyToUndef(store.from.phone),
@@ -51,7 +51,7 @@ export function InvoiceEditor() {
         toBusinessNumber: emptyToUndef(store.to.businessNumber),
         notes: emptyToUndef(store.notes),
         taxRate: store.taxRate,
-        discountType: store.discountType,
+        discountType: store.discountType.toUpperCase(),
         discountValue: store.discountValue,
         currency: store.currency.code,
         accentColor: store.accentColor,

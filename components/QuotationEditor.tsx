@@ -49,7 +49,7 @@ export function QuotationEditor() {
         toBusinessNumber: emptyToUndef(store.to.businessNumber),
         termsAndConditions: emptyToUndef(store.termsAndConditions),
         notes: emptyToUndef(store.notes),
-        discountType: store.discountType,
+        discountType: store.discountType.toUpperCase(),
         discountValue: store.discountValue,
         currency: store.currency.code,
         accentColor: store.accentColor,
