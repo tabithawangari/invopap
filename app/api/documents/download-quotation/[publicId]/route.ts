@@ -1,8 +1,7 @@
 // app/api/documents/download-quotation/[publicId]/route.ts — Quotation PDF download
 import { NextRequest, NextResponse } from "next/server";
-import { getQuotationByPublicId, updateQuotationPdfUrl } from "@/lib/db";
+import { getQuotationByPublicId, consumeQuotationDownload } from "@/lib/db";
 import { renderQuotationPdf } from "@/lib/quotation-pdf";
-import { uploadPdf } from "@/lib/storage";
 import { checkRateLimit, publicReadLimiter } from "@/lib/rate-limit";
 import { createRequestLogger } from "@/lib/logger";
 
@@ -26,20 +25,16 @@ export async function GET(
       );
     }
 
-    // Guard: payment required
-    if (!quotation.isPaid) {
+    // Atomic claim: flip isPaid from true to false, returns false if already consumed
+    const claimed = await consumeQuotationDownload(quotation.id);
+    if (!claimed) {
       return NextResponse.json(
         { error: "Payment required", publicId: params.publicId },
         { status: 402 }
       );
     }
 
-    // 1. Serve cached PDF if available
-    if (quotation.pdfUrl) {
-      return NextResponse.redirect(quotation.pdfUrl, 302);
-    }
-
-    // 2. Generate PDF
+    // Generate PDF (isPaid is now false, no race condition possible)
     let pdfBuffer: Buffer;
     try {
       pdfBuffer = await renderQuotationPdf(quotation, { showWatermark: false });
@@ -53,18 +48,6 @@ export async function GET(
       throw error;
     }
 
-    // 3. Cache: upload to Storage
-    try {
-      const url = await uploadPdf(`quotation-${params.publicId}`, pdfBuffer);
-      await updateQuotationPdfUrl(quotation.id, url);
-    } catch (cacheError) {
-      logger.warn("quotation_pdf_cache_failed", {
-        publicId: params.publicId,
-        error: cacheError instanceof Error ? cacheError.message : "unknown",
-      });
-    }
-
-    // 4. Return PDF
     const filename = `${quotation.quotationNumber}.pdf`;
 
     logger.done("quotation_pdf_download", {
@@ -79,7 +62,7 @@ export async function GET(
         "Content-Type": "application/pdf",
         "Content-Disposition": `attachment; filename="${filename}"`,
         "Content-Length": String(pdfBuffer.length),
-        "Cache-Control": "private, max-age=3600",
+        "Cache-Control": "no-store",
       },
     });
   } catch (error) {

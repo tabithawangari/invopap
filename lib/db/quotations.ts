@@ -404,6 +404,23 @@ export async function markQuotationPaid(
     .eq("id", quotationId);
 }
 
+// Atomic claim: flip isPaid from true to false, returns true if successful
+export async function consumeQuotationDownload(quotationId: string): Promise<boolean> {
+  const admin = getAdminClient();
+  const { data } = await admin
+    .from("Quotation")
+    .update({
+      isPaid: false,
+      paidAt: null,
+      pdfUrl: null,
+    })
+    .eq("id", quotationId)
+    .eq("isPaid", true) // Only update if currently paid
+    .select("id")
+    .single();
+  return !!data;
+}
+
 export async function updateQuotationPdfUrl(
   quotationId: string,
   pdfUrl: string

@@ -22,6 +22,11 @@ export interface EnvConfig {
   UPSTASH_REDIS_REST_TOKEN?: string;
   ADMIN_SECRET?: string;
   SENTRY_DSN?: string;
+
+  // Email (Resend)
+  RESEND_API_KEY?: string;
+  RESEND_FROM_EMAIL?: string; // e.g., "documents@yourdomain.com"
+  RESEND_FROM_NAME?: string;  // e.g., "Invopap Documents"
 }
 
 export function validateEnv(): { valid: boolean; errors: string[]; warnings: string[] } {
@@ -88,6 +93,11 @@ export function validateEnv(): { valid: boolean; errors: string[]; warnings: str
         "SENTRY_DSN not set — error tracking is disabled"
       );
     }
+    if (!process.env.RESEND_API_KEY) {
+      warnings.push(
+        "RESEND_API_KEY not set — email delivery will be disabled"
+      );
+    }
   }
 
   return { valid: errors.length === 0, errors, warnings };
@@ -112,4 +122,16 @@ export function isMpesaEnabled(): boolean {
     process.env.MPESA_PASSKEY &&
     process.env.MPESA_SHORTCODE
   );
+}
+
+export function isEmailEnabled(): boolean {
+  return !!process.env.RESEND_API_KEY;
+}
+
+export function getResendConfig() {
+  return {
+    apiKey: process.env.RESEND_API_KEY || "",
+    fromEmail: process.env.RESEND_FROM_EMAIL || "documents@invopap.com",
+    fromName: process.env.RESEND_FROM_NAME || "Invopap",
+  };
 }

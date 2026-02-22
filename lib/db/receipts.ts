@@ -399,6 +399,23 @@ export async function markReceiptPaid(
     .eq("id", receiptId);
 }
 
+// Atomic claim: flip isPaid from true to false, returns true if successful
+export async function consumeReceiptDownload(receiptId: string): Promise<boolean> {
+  const admin = getAdminClient();
+  const { data } = await admin
+    .from("Receipt")
+    .update({
+      isPaid: false,
+      paidAt: null,
+      pdfUrl: null,
+    })
+    .eq("id", receiptId)
+    .eq("isPaid", true) // Only update if currently paid
+    .select("id")
+    .single();
+  return !!data;
+}
+
 export async function updateReceiptPdfUrl(
   receiptId: string,
   pdfUrl: string

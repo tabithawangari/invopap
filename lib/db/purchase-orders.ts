@@ -417,6 +417,23 @@ export async function markPurchaseOrderPaid(
     .eq("id", purchaseOrderId);
 }
 
+// Atomic claim: flip isPaid from true to false, returns true if successful
+export async function consumePurchaseOrderDownload(purchaseOrderId: string): Promise<boolean> {
+  const admin = getAdminClient();
+  const { data } = await admin
+    .from("PurchaseOrder")
+    .update({
+      isPaid: false,
+      paidAt: null,
+      pdfUrl: null,
+    })
+    .eq("id", purchaseOrderId)
+    .eq("isPaid", true) // Only update if currently paid
+    .select("id")
+    .single();
+  return !!data;
+}
+
 export async function updatePurchaseOrderPdfUrl(
   purchaseOrderId: string,
   pdfUrl: string

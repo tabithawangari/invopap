@@ -4,6 +4,7 @@
 import { useState, useCallback } from "react";
 import { formatCurrency, formatDate } from "@/lib/utils/format";
 import { PaymentModal } from "@/components/PaymentModal";
+import { ShareModal } from "@/components/ShareModal";
 
 interface InvoiceData {
   id: string;
@@ -49,25 +50,29 @@ interface InvoiceData {
     amount: number;
   }>;
   photos: Array<{ id: string; url: string }>;
+  userId: string | null;
 }
 
 export function PublicInvoiceView({ invoice }: { invoice: InvoiceData }) {
   const [showPayment, setShowPayment] = useState(false);
+  const [showShare, setShowShare] = useState(false);
   const accent = invoice.accentColor || "#1f8ea3";
+  const isGuest = !invoice.userId;
 
   const handleDownload = useCallback(() => {
     if (!invoice.isPaid) {
       setShowPayment(true);
       return;
     }
-    // Paid — trigger download
-    window.location.href = `/api/documents/download/${invoice.publicId}`;
-  }, [invoice.isPaid, invoice.publicId]);
+    // Paid — show share options
+    setShowShare(true);
+  }, [invoice.isPaid]);
 
   const handlePaymentSuccess = useCallback(() => {
     setShowPayment(false);
-    window.location.href = `/api/documents/download/${invoice.publicId}`;
-  }, [invoice.publicId]);
+    // Show share modal after successful payment
+    setShowShare(true);
+  }, []);
 
   return (
     <div className="min-h-screen bg-mist/30">
@@ -84,7 +89,7 @@ export function PublicInvoiceView({ invoice }: { invoice: InvoiceData }) {
             <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
             </svg>
-            {invoice.isPaid ? "Download PDF" : "Download PDF (KSh 10)"}
+            {invoice.isPaid ? "Download / Share" : "Download PDF (KSh 10)"}
           </button>
         </div>
       </header>
@@ -285,6 +290,18 @@ export function PublicInvoiceView({ invoice }: { invoice: InvoiceData }) {
           publicId={invoice.publicId}
           onClose={() => setShowPayment(false)}
           onSuccess={handlePaymentSuccess}
+        />
+      )}
+
+      {/* Share modal */}
+      {showShare && (
+        <ShareModal
+          publicId={invoice.publicId}
+          documentNumber={invoice.invoiceNumber}
+          documentType="invoice"
+          downloadUrl={`/api/documents/download/${invoice.publicId}`}
+          onClose={() => setShowShare(false)}
+          isGuest={isGuest}
         />
       )}
     </div>

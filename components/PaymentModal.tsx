@@ -172,12 +172,13 @@ export function PaymentModal({ publicId, onClose, onSuccess, documentType = "INV
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink/50 backdrop-blur-sm">
-      <div className="bg-white rounded-2xl shadow-soft w-full max-w-md mx-4 p-6 animate-fadeUp">
+      <div className="relative bg-white rounded-2xl shadow-soft w-full max-w-md mx-4 p-6 animate-fadeUp">
         {/* Close button */}
         {(state === "input" || state === "error") && (
           <button
             onClick={onClose}
-            className="absolute top-4 right-4 text-ink/30 hover:text-ink transition-colors"
+            aria-label="Close"
+            className="absolute top-4 right-4 text-ink/40 hover:text-ink transition-colors p-1 rounded-md hover:bg-mist/50"
           >
             <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />

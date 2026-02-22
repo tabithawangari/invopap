@@ -7,6 +7,7 @@ export {
   deleteInvoice,
   listInvoices,
   markInvoicePaid,
+  consumeInvoiceDownload,
   updateInvoicePdfUrl,
   getDashboardStats,
   getPlatformStats,

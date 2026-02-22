@@ -4,6 +4,7 @@
 import { useState, useCallback } from "react";
 import { formatDate, formatCurrency } from "@/lib/utils/format";
 import { PaymentModal } from "@/components/PaymentModal";
+import { ShareModal } from "@/components/ShareModal";
 
 const PAYMENT_METHOD_LABELS: Record<string, string> = {
   cash: "Cash",
@@ -62,6 +63,7 @@ interface CashSaleData {
     amount: number;
   }>;
   photos: Array<{ id: string; url: string }>;
+  userId: string | null;
 }
 
 export function PublicCashSaleView({
@@ -70,20 +72,24 @@ export function PublicCashSaleView({
   cashSale: CashSaleData;
 }) {
   const [showPayment, setShowPayment] = useState(false);
+  const [showShare, setShowShare] = useState(false);
   const accent = cs.accentColor || "#22c55e";
+  const isGuest = !cs.userId;
 
   const handleDownload = useCallback(() => {
     if (!cs.isPaid) {
       setShowPayment(true);
       return;
     }
-    window.location.href = `/api/documents/download-cs/${cs.publicId}`;
-  }, [cs.isPaid, cs.publicId]);
+    // Paid — show share options
+    setShowShare(true);
+  }, [cs.isPaid]);
 
   const handlePaymentSuccess = useCallback(() => {
     setShowPayment(false);
-    window.location.href = `/api/documents/download-cs/${cs.publicId}`;
-  }, [cs.publicId]);
+    // Show share modal after successful payment
+    setShowShare(true);
+  }, []);
 
   return (
     <div className="min-h-screen bg-mist/30">
@@ -110,7 +116,7 @@ export function PublicCashSaleView({
                 d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
               />
             </svg>
-            {cs.isPaid ? "Download PDF" : "Download PDF (KSh 10)"}
+            {cs.isPaid ? "Download / Share" : "Download PDF (KSh 10)"}
           </button>
         </div>
       </header>
@@ -392,6 +398,18 @@ export function PublicCashSaleView({
           onClose={() => setShowPayment(false)}
           onSuccess={handlePaymentSuccess}
           documentType="CASH_SALE"
+        />
+      )}
+
+      {/* Share modal */}
+      {showShare && (
+        <ShareModal
+          publicId={cs.publicId}
+          documentNumber={cs.cashSaleNumber}
+          documentType="cash-sale"
+          downloadUrl={`/api/documents/download-cs/${cs.publicId}`}
+          onClose={() => setShowShare(false)}
+          isGuest={isGuest}
         />
       )}
     </div>

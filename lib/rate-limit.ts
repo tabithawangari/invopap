@@ -191,6 +191,20 @@ export const guestInvoiceLimiter = createRateLimiter({
   refillInterval: 86_400_000, // 20/day
 });
 
+// Email sending rate limiter (prevent abuse)
+export const emailSendLimiter = createRateLimiter({
+  maxTokens: 10,
+  refillRate: 10,
+  refillInterval: 3_600_000, // 10/hour
+});
+
+// Share link generation rate limiter
+export const shareLinkLimiter = createRateLimiter({
+  maxTokens: 30,
+  refillRate: 30,
+  refillInterval: 3_600_000, // 30/hour
+});
+
 // =============================================================================
 // Client IP Extraction
 // =============================================================================

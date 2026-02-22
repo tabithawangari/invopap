@@ -4,6 +4,7 @@
 import { useState, useCallback } from "react";
 import { formatDate } from "@/lib/utils/format";
 import { PaymentModal } from "@/components/PaymentModal";
+import { ShareModal } from "@/components/ShareModal";
 
 interface DeliveryNoteData {
   id: string;
@@ -40,6 +41,7 @@ interface DeliveryNoteData {
     quantity: number;
   }>;
   photos: Array<{ id: string; url: string }>;
+  userId: string | null;
 }
 
 export function PublicDeliveryNoteView({
@@ -48,20 +50,24 @@ export function PublicDeliveryNoteView({
   deliveryNote: DeliveryNoteData;
 }) {
   const [showPayment, setShowPayment] = useState(false);
+  const [showShare, setShowShare] = useState(false);
   const accent = dn.accentColor || "#14b8a6";
+  const isGuest = !dn.userId;
 
   const handleDownload = useCallback(() => {
     if (!dn.isPaid) {
       setShowPayment(true);
       return;
     }
-    window.location.href = `/api/documents/download-dn/${dn.publicId}`;
-  }, [dn.isPaid, dn.publicId]);
+    // Paid — show share options
+    setShowShare(true);
+  }, [dn.isPaid]);
 
   const handlePaymentSuccess = useCallback(() => {
     setShowPayment(false);
-    window.location.href = `/api/documents/download-dn/${dn.publicId}`;
-  }, [dn.publicId]);
+    // Show share modal after successful payment
+    setShowShare(true);
+  }, []);
 
   return (
     <div className="min-h-screen bg-mist/30">
@@ -88,7 +94,7 @@ export function PublicDeliveryNoteView({
                 d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
               />
             </svg>
-            {dn.isPaid ? "Download PDF" : "Download PDF (KSh 10)"}
+            {dn.isPaid ? "Download / Share" : "Download PDF (KSh 10)"}
           </button>
         </div>
       </header>
@@ -306,6 +312,18 @@ export function PublicDeliveryNoteView({
           onClose={() => setShowPayment(false)}
           onSuccess={handlePaymentSuccess}
           documentType="DELIVERY_NOTE"
+        />
+      )}
+
+      {/* Share modal */}
+      {showShare && (
+        <ShareModal
+          publicId={dn.publicId}
+          documentNumber={dn.deliveryNoteNumber}
+          documentType="delivery-note"
+          downloadUrl={`/api/documents/download-dn/${dn.publicId}`}
+          onClose={() => setShowShare(false)}
+          isGuest={isGuest}
         />
       )}
     </div>

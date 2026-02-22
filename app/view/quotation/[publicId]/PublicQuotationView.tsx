@@ -4,6 +4,7 @@
 import { useState, useCallback } from "react";
 import { formatDate, formatCurrency, getCurrency } from "@/lib/utils/format";
 import { PaymentModal } from "@/components/PaymentModal";
+import { ShareModal } from "@/components/ShareModal";
 
 interface QuotationData {
   id: string;
@@ -51,6 +52,7 @@ interface QuotationData {
     amount: number;
   }>;
   photos: Array<{ id: string; url: string }>;
+  userId: string | null;
 }
 
 export function PublicQuotationView({
@@ -59,22 +61,26 @@ export function PublicQuotationView({
   quotation: QuotationData;
 }) {
   const [showPayment, setShowPayment] = useState(false);
+  const [showShare, setShowShare] = useState(false);
   const accent = q.accentColor || "#f97316";
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const currencyInfo = getCurrency(q.currency);
+  const isGuest = !q.userId;
 
   const handleDownload = useCallback(() => {
     if (!q.isPaid) {
       setShowPayment(true);
       return;
     }
-    window.location.href = `/api/documents/download-quotation/${q.publicId}`;
-  }, [q.isPaid, q.publicId]);
+    // Paid — show share options
+    setShowShare(true);
+  }, [q.isPaid]);
 
   const handlePaymentSuccess = useCallback(() => {
     setShowPayment(false);
-    window.location.href = `/api/documents/download-quotation/${q.publicId}`;
-  }, [q.publicId]);
+    // Show share modal after successful payment
+    setShowShare(true);
+  }, []);
 
   return (
     <div className="min-h-screen bg-mist/30">
@@ -92,7 +98,7 @@ export function PublicQuotationView({
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                 d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
             </svg>
-            {q.isPaid ? "Download PDF" : "Download PDF (KSh 10)"}
+            {q.isPaid ? "Download / Share" : "Download PDF (KSh 10)"}
           </button>
         </div>
       </header>
@@ -259,6 +265,18 @@ export function PublicQuotationView({
           onClose={() => setShowPayment(false)}
           onSuccess={handlePaymentSuccess}
           documentType="QUOTATION"
+        />
+      )}
+
+      {/* Share modal */}
+      {showShare && (
+        <ShareModal
+          publicId={q.publicId}
+          documentNumber={q.quotationNumber}
+          documentType="quotation"
+          downloadUrl={`/api/documents/download-quotation/${q.publicId}`}
+          onClose={() => setShowShare(false)}
+          isGuest={isGuest}
         />
       )}
     </div>

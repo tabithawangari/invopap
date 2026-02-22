@@ -4,6 +4,7 @@
 import { useState, useCallback } from "react";
 import { formatDate, formatCurrency } from "@/lib/utils/format";
 import { PaymentModal } from "@/components/PaymentModal";
+import { ShareModal } from "@/components/ShareModal";
 
 interface PurchaseOrderData {
   id: string;
@@ -61,6 +62,7 @@ interface PurchaseOrderData {
     amount: number;
   }>;
   photos: Array<{ id: string; url: string }>;
+  userId: string | null;
 }
 
 export function PublicPurchaseOrderView({
@@ -69,20 +71,24 @@ export function PublicPurchaseOrderView({
   purchaseOrder: PurchaseOrderData;
 }) {
   const [showPayment, setShowPayment] = useState(false);
+  const [showShare, setShowShare] = useState(false);
   const accent = po.accentColor || "#d97706";
+  const isGuest = !po.userId;
 
   const handleDownload = useCallback(() => {
     if (!po.isPaid) {
       setShowPayment(true);
       return;
     }
-    window.location.href = `/api/documents/download-po/${po.publicId}`;
-  }, [po.isPaid, po.publicId]);
+    // Paid — show share options
+    setShowShare(true);
+  }, [po.isPaid]);
 
   const handlePaymentSuccess = useCallback(() => {
     setShowPayment(false);
-    window.location.href = `/api/documents/download-po/${po.publicId}`;
-  }, [po.publicId]);
+    // Show share modal after successful payment
+    setShowShare(true);
+  }, []);
 
   return (
     <div className="min-h-screen bg-mist/30">
@@ -109,7 +115,7 @@ export function PublicPurchaseOrderView({
                 d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
               />
             </svg>
-            {po.isPaid ? "Download PDF" : "Download PDF (KSh 10)"}
+            {po.isPaid ? "Download / Share" : "Download PDF (KSh 10)"}
           </button>
         </div>
       </header>
@@ -394,6 +400,18 @@ export function PublicPurchaseOrderView({
           onClose={() => setShowPayment(false)}
           onSuccess={handlePaymentSuccess}
           documentType="PURCHASE_ORDER"
+        />
+      )}
+
+      {/* Share modal */}
+      {showShare && (
+        <ShareModal
+          publicId={po.publicId}
+          documentNumber={po.purchaseOrderNumber}
+          documentType="purchase-order"
+          downloadUrl={`/api/documents/download-po/${po.publicId}`}
+          onClose={() => setShowShare(false)}
+          isGuest={isGuest}
         />
       )}
     </div>

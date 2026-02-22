@@ -1,8 +1,7 @@
 // app/api/documents/download-dn/[publicId]/route.ts — Delivery Note PDF download
 import { NextRequest, NextResponse } from "next/server";
-import { getDeliveryNoteByPublicId, updateDeliveryNotePdfUrl } from "@/lib/db";
+import { getDeliveryNoteByPublicId, consumeDeliveryNoteDownload } from "@/lib/db";
 import { renderDeliveryNotePdf } from "@/lib/delivery-note-pdf";
-import { uploadPdf } from "@/lib/storage";
 import { checkRateLimit, publicReadLimiter } from "@/lib/rate-limit";
 import { createRequestLogger } from "@/lib/logger";
 
@@ -26,20 +25,16 @@ export async function GET(
       );
     }
 
-    // Guard: payment required
-    if (!note.isPaid) {
+    // Atomic claim: flip isPaid from true to false, returns false if already consumed
+    const claimed = await consumeDeliveryNoteDownload(note.id);
+    if (!claimed) {
       return NextResponse.json(
         { error: "Payment required", publicId: params.publicId },
         { status: 402 }
       );
     }
 
-    // 1. Serve cached PDF if available
-    if (note.pdfUrl) {
-      return NextResponse.redirect(note.pdfUrl, 302);
-    }
-
-    // 2. Generate PDF
+    // Generate PDF (isPaid is now false, no race condition possible)
     let pdfBuffer: Buffer;
     try {
       pdfBuffer = await renderDeliveryNotePdf(note, { showWatermark: false });
@@ -53,18 +48,6 @@ export async function GET(
       throw error;
     }
 
-    // 3. Cache: upload to Storage
-    try {
-      const url = await uploadPdf(`dn-${params.publicId}`, pdfBuffer);
-      await updateDeliveryNotePdfUrl(note.id, url);
-    } catch (cacheError) {
-      logger.warn("dn_pdf_cache_failed", {
-        publicId: params.publicId,
-        error: cacheError instanceof Error ? cacheError.message : "unknown",
-      });
-    }
-
-    // 4. Return PDF
     const filename = `${note.deliveryNoteNumber}.pdf`;
 
     logger.done("dn_pdf_download", {
@@ -79,7 +62,7 @@ export async function GET(
         "Content-Type": "application/pdf",
         "Content-Disposition": `attachment; filename="${filename}"`,
         "Content-Length": String(pdfBuffer.length),
-        "Cache-Control": "private, max-age=3600",
+        "Cache-Control": "no-store",
       },
     });
   } catch (error) {

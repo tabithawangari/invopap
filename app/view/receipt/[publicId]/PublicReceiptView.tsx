@@ -4,6 +4,7 @@
 import { useState, useCallback } from "react";
 import { formatDate, formatNumber, getCurrency } from "@/lib/utils/format";
 import { PaymentModal } from "@/components/PaymentModal";
+import { ShareModal } from "@/components/ShareModal";
 
 interface ReceiptData {
   id: string;
@@ -39,6 +40,7 @@ interface ReceiptData {
   logoDataUrl: string | null;
   signatureDataUrl: string | null;
   photos: Array<{ id: string; url: string }>;
+  userId: string | null;
 }
 
 export function PublicReceiptView({
@@ -47,21 +49,25 @@ export function PublicReceiptView({
   receipt: ReceiptData;
 }) {
   const [showPayment, setShowPayment] = useState(false);
+  const [showShare, setShowShare] = useState(false);
   const accent = r.accentColor || "#4c1d95";
   const currencyInfo = getCurrency(r.currency);
+  const isGuest = !r.userId;
 
   const handleDownload = useCallback(() => {
     if (!r.isPaid) {
       setShowPayment(true);
       return;
     }
-    window.location.href = `/api/documents/download-receipt/${r.publicId}`;
-  }, [r.isPaid, r.publicId]);
+    // Paid — show share options
+    setShowShare(true);
+  }, [r.isPaid]);
 
   const handlePaymentSuccess = useCallback(() => {
     setShowPayment(false);
-    window.location.href = `/api/documents/download-receipt/${r.publicId}`;
-  }, [r.publicId]);
+    // Show share modal after successful payment
+    setShowShare(true);
+  }, []);
 
   return (
     <div className="min-h-screen bg-mist/30">
@@ -88,7 +94,7 @@ export function PublicReceiptView({
                 d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
               />
             </svg>
-            {r.isPaid ? "Download PDF" : "Download PDF (KSh 10)"}
+            {r.isPaid ? "Download / Share" : "Download PDF (KSh 10)"}
           </button>
         </div>
       </header>
@@ -391,6 +397,18 @@ export function PublicReceiptView({
           onClose={() => setShowPayment(false)}
           onSuccess={handlePaymentSuccess}
           documentType="RECEIPT"
+        />
+      )}
+
+      {/* Share modal */}
+      {showShare && (
+        <ShareModal
+          publicId={r.publicId}
+          documentNumber={r.receiptNumber}
+          documentType="receipt"
+          downloadUrl={`/api/documents/download-receipt/${r.publicId}`}
+          onClose={() => setShowShare(false)}
+          isGuest={isGuest}
         />
       )}
     </div>

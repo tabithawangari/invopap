@@ -136,9 +136,17 @@ export function DashboardClient({
         <div className="bg-white rounded-xl border border-mist">
           <div className="px-6 py-4 border-b border-mist flex items-center justify-between">
             <h2 className="font-semibold text-ink">Recent Documents</h2>
-            <span className="text-xs text-ink/40">
-              {documents.length} shown
-            </span>
+            <div className="flex items-center gap-3">
+              <span className="text-xs text-ink/40">
+                {documents.length} shown
+              </span>
+              <Link
+                href="/dashboard/documents"
+                className="text-xs text-lagoon hover:underline"
+              >
+                View Library →
+              </Link>
+            </div>
           </div>
 
           {documents.length === 0 ? (
