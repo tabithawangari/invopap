@@ -173,15 +173,15 @@ export function PaymentModal({ publicId, onClose, onSuccess, documentType = "INV
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink/50 backdrop-blur-sm">
       <div className="relative bg-white rounded-2xl shadow-soft w-full max-w-md mx-4 p-6 animate-fadeUp">
-        {/* Close button */}
-        {(state === "input" || state === "error") && (
+        {/* Close button - always visible except during success */}
+        {state !== "success" && (
           <button
             onClick={onClose}
             aria-label="Close"
-            className="absolute top-4 right-4 text-ink/40 hover:text-ink transition-colors p-1 rounded-md hover:bg-mist/50"
+            className="absolute top-3 right-3 text-ink/50 hover:text-ink transition-colors p-2 rounded-full hover:bg-mist/50 z-10"
           >
-            <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
         )}
@@ -249,7 +249,13 @@ export function PaymentModal({ publicId, onClose, onSuccess, documentType = "INV
             )}
 
             <div className="flex items-center justify-between pt-2">
-              <span className="text-lg font-bold text-ink">KSh 10</span>
+              <button
+                type="button"
+                onClick={onClose}
+                className="rounded-lg border border-mist px-4 py-3 text-ink/60 font-medium hover:bg-mist/30 transition-colors"
+              >
+                Cancel
+              </button>
               <button
                 type="submit"
                 className="rounded-lg bg-lagoon px-6 py-3 text-white font-medium hover:bg-lagoon/90 transition-colors"
@@ -267,6 +273,13 @@ export function PaymentModal({ publicId, onClose, onSuccess, documentType = "INV
             <p className="text-sm text-ink/40">
               This usually takes 10-30 seconds...
             </p>
+            <button
+              type="button"
+              onClick={onClose}
+              className="mt-2 text-sm text-ink/50 hover:text-ink underline transition-colors"
+            >
+              Cancel and close
+            </button>
           </div>
         )}
 
