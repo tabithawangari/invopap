@@ -115,7 +115,7 @@ async function getAccessToken(): Promise<string> {
       const response = await fetch(url, {
         method: "GET",
         headers: { Authorization: `Basic ${auth}` },
-        signal: AbortSignal.timeout(15_000),
+        signal: AbortSignal.timeout(20_000),
       });
 
       if (!response.ok) {
@@ -223,36 +223,63 @@ export async function initiateSTKPush(
     callbackUrl,
   });
 
-  const response = await fetch(
-    `${getBaseUrl()}/mpesa/stkpush/v1/processrequest`,
-    {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(body),
-      signal: AbortSignal.timeout(15_000),
+  // Retry once on timeout/network errors
+  let lastError: Error | null = null;
+  for (let attempt = 0; attempt < 2; attempt++) {
+    try {
+      const response = await fetch(
+        `${getBaseUrl()}/mpesa/stkpush/v1/processrequest`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(body),
+          signal: AbortSignal.timeout(30_000),
+        }
+      );
+
+      if (!response.ok) {
+        const text = await response.text();
+        log("error", "mpesa_stk_push_failed", {
+          status: response.status,
+          body: text,
+          attempt,
+        });
+        throw new Error(`STK Push failed: ${response.status} ${text}`);
+      }
+
+      const data: STKPushResponse = await response.json();
+
+      if (data.ResponseCode !== "0") {
+        log("error", "mpesa_stk_push_rejected", { data });
+        throw new Error(`STK Push rejected: ${data.ResponseDescription}`);
+      }
+
+      return data;
+    } catch (error) {
+      lastError = error instanceof Error ? error : new Error("Unknown error");
+      const isRetryable =
+        lastError.name === "TimeoutError" ||
+        lastError.name === "AbortError" ||
+        lastError.message.includes("fetch failed") ||
+        lastError.message.includes("ECONNREFUSED") ||
+        lastError.message.includes("ETIMEDOUT");
+
+      if (isRetryable && attempt < 1) {
+        log("warn", "mpesa_stk_push_retry", {
+          attempt,
+          error: lastError.message,
+        });
+        await new Promise((r) => setTimeout(r, 2000));
+        continue;
+      }
+      throw lastError;
     }
-  );
-
-  if (!response.ok) {
-    const text = await response.text();
-    log("error", "mpesa_stk_push_failed", {
-      status: response.status,
-      body: text,
-    });
-    throw new Error(`STK Push failed: ${response.status} ${text}`);
   }
 
-  const data: STKPushResponse = await response.json();
-
-  if (data.ResponseCode !== "0") {
-    log("error", "mpesa_stk_push_rejected", { data });
-    throw new Error(`STK Push rejected: ${data.ResponseDescription}`);
-  }
-
-  return data;
+  throw lastError || new Error("STK Push failed after retries");
 }
 
 // =============================================================================
@@ -294,7 +321,7 @@ export async function querySTKPush(
         Timestamp: timestamp,
         CheckoutRequestID: checkoutRequestId,
       }),
-      signal: AbortSignal.timeout(15_000),
+      signal: AbortSignal.timeout(30_000),
     }
   );
 

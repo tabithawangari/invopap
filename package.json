@@ -6,7 +6,11 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "db:push": "supabase db push",
+    "db:reset": "supabase db reset",
+    "db:migrate:new": "supabase migration new",
+    "db:lint": "node scripts/lint-migrations.mjs"
   },
   "dependencies": {
     "@paralleldrive/cuid2": "^2.2.2",

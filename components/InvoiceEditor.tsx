@@ -21,29 +21,10 @@ export function InvoiceEditor() {
   const [showOptions, setShowOptions] = useState(false);
   const [saving, setSaving] = useState(false);
 
-  // Validate required fields before save
-  const validateForm = useCallback((): string | null => {
-    if (!store.from.name.trim()) return "Please enter the sender's name (From)";
-    if (!store.to.name.trim()) return "Please enter the recipient's name (To)";
-    const hasValidItem = store.items.some((item) => item.description.trim());
-    if (!hasValidItem) return "Please add at least one item with a description";
-    return null;
-  }, [store.from.name, store.to.name, store.items]);
-
   // Save invoice to API, return the publicId
   const saveInvoice = useCallback(async (): Promise<string | null> => {
-    // Client-side validation
-    const validationError = validateForm();
-    if (validationError) {
-      alert(validationError);
-      return null;
-    }
-
     setSaving(true);
     try {
-      // Helper to convert empty strings to undefined (for optional fields)
-      const emptyToUndef = (val: string | null | undefined) => val?.trim() || undefined;
-
       const payload = {
         documentTitle: store.documentTitle,
         documentType: store.documentType.toUpperCase(),
@@ -52,22 +33,22 @@ export function InvoiceEditor() {
         dueDate: store.dueDate || undefined,
         paymentTerms: store.paymentTerms.toUpperCase(),
         fromName: store.from.name,
-        fromEmail: emptyToUndef(store.from.email),
-        fromPhone: emptyToUndef(store.from.phone),
-        fromAddress: emptyToUndef(store.from.address),
-        fromCity: emptyToUndef(store.from.city),
-        fromZipCode: emptyToUndef(store.from.zipCode),
-        fromBusinessNumber: emptyToUndef(store.from.businessNumber),
+        fromEmail: store.from.email || undefined,
+        fromPhone: store.from.phone || undefined,
+        fromAddress: store.from.address || undefined,
+        fromCity: store.from.city || undefined,
+        fromZipCode: store.from.zipCode || undefined,
+        fromBusinessNumber: store.from.businessNumber || undefined,
         toName: store.to.name,
-        toEmail: emptyToUndef(store.to.email),
-        toPhone: emptyToUndef(store.to.phone),
-        toAddress: emptyToUndef(store.to.address),
-        toCity: emptyToUndef(store.to.city),
-        toZipCode: emptyToUndef(store.to.zipCode),
-        toBusinessNumber: emptyToUndef(store.to.businessNumber),
-        notes: emptyToUndef(store.notes),
+        toEmail: store.to.email || undefined,
+        toPhone: store.to.phone || undefined,
+        toAddress: store.to.address || undefined,
+        toCity: store.to.city || undefined,
+        toZipCode: store.to.zipCode || undefined,
+        toBusinessNumber: store.to.businessNumber || undefined,
+        notes: store.notes || undefined,
         taxRate: store.taxRate,
-        discountType: store.discountType.toUpperCase(),
+        discountType: store.discountType === "percentage" ? "PERCENTAGE" : "FIXED",
         discountValue: store.discountValue,
         currency: store.currency.code,
         accentColor: store.accentColor,
@@ -76,7 +57,7 @@ export function InvoiceEditor() {
         photoDataUrls: store.photoDataUrls,
         items: store.items.map((item) => ({
           description: item.description,
-          additionalDetails: emptyToUndef(item.additionalDetails),
+          additionalDetails: item.additionalDetails,
           quantity: item.quantity,
           rate: item.rate,
         })),
@@ -115,13 +96,10 @@ export function InvoiceEditor() {
     } finally {
       setSaving(false);
     }
-  }, [store, validateForm]);
+  }, [store]);
 
   const handleDownload = useCallback(async () => {
-    // Force save if form was modified to create a new unpaid document
-    const publicId = (store.isDirty || !store.currentPublicId)
-      ? (await saveInvoice())
-      : store.currentPublicId;
+    const publicId = store.currentPublicId || (await saveInvoice());
     if (!publicId) return;
 
     const res = await fetch(`/api/documents/download/${publicId}`);
@@ -142,7 +120,7 @@ export function InvoiceEditor() {
       const err = await res.json().catch(() => ({}));
       alert(err.error || "Failed to download");
     }
-  }, [store.currentPublicId, store.isDirty, store.invoiceNumber, saveInvoice]);
+  }, [store.currentPublicId, store.invoiceNumber, saveInvoice]);
 
   const handleNew = useCallback(() => {
     if (confirm("Start a new document? Unsaved changes will be lost.")) {
@@ -211,7 +189,7 @@ export function InvoiceEditor() {
                       }}
                     />
                   ) : (
-                    <div className="flex items-center gap-1">
+                    <div className="hidden sm:flex items-center gap-1">
                       <Link
                         href="/auth/login"
                         className="rounded-lg px-3 py-1.5 text-sm text-ink/60 hover:text-ink hover:bg-mist/50 transition-colors"
@@ -228,7 +206,22 @@ export function InvoiceEditor() {
                   )}
                 </>
               )}
+
+              <button
+                onClick={() => setShowOptions(!showOptions)}
+                className="rounded-lg border border-mist p-2 text-ink/40 hover:text-ink hover:bg-mist/50 transition-colors lg:hidden touch-target flex items-center justify-center"
+                aria-label="Toggle options"
+              >
+                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
+                </svg>
+              </button>
             </div>
+          </div>
+
+          {/* Row 2: Document Type Selector */}
+          <div className="pb-2 -mx-1">
+            <DocumentTypeSwitcher variant="header" fallbackLabel="Invoice" />
           </div>
         </div>
       </header>
@@ -241,23 +234,6 @@ export function InvoiceEditor() {
             {activeTab === "edit" ? (
               <div className="bg-white rounded-xl border border-mist shadow-sm p-4 sm:p-6 md:p-8">
                 <InvoiceForm />
-                {/* Mobile download button */}
-                <div className="mt-6 pt-6 border-t border-mist lg:hidden">
-                  <button
-                    onClick={handleDownload}
-                    disabled={saving}
-                    className="w-full rounded-lg bg-ember px-4 py-3 text-sm font-medium text-white hover:bg-ember/90 transition-colors flex items-center justify-center gap-2"
-                  >
-                    {saving ? (
-                      <div className="h-4 w-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                    ) : (
-                      <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                      </svg>
-                    )}
-                    Download PDF
-                  </button>
-                </div>
               </div>
             ) : (
               <InvoicePreview />
@@ -266,7 +242,7 @@ export function InvoiceEditor() {
 
           {/* Options sidebar (desktop) */}
           <div className="hidden lg:block w-64 flex-shrink-0">
-            <div className="sticky top-20">
+            <div className="sticky top-[7.5rem] space-y-4">
               <OptionsSidebar
                 onDownload={handleDownload}
                 onNew={handleNew}
@@ -276,17 +252,6 @@ export function InvoiceEditor() {
           </div>
         </div>
       </div>
-
-      {/* ─── Floating options button (mobile/tablet) ─── */}
-      <button
-        onClick={() => setShowOptions(!showOptions)}
-        className="fixed right-4 top-1/2 -translate-y-1/2 z-30 lg:hidden rounded-full bg-lagoon p-3 text-white shadow-lg hover:bg-lagoon/90 transition-colors"
-        aria-label="Toggle options"
-      >
-        <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
-        </svg>
-      </button>
 
       {/* ─── Options drawer (mobile/tablet) ─── */}
       {showOptions && (

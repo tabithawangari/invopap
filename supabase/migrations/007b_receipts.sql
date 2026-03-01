@@ -1,4 +1,5 @@
--- Migration 007: Official Receipts — separate tables for receipt documents
+-- Migration 007b: Official Receipts — separate tables for receipt documents
+-- (Renamed from 007_receipts.sql to avoid duplicate numbering with 007_cash_sales.sql)
 -- Receipts are payment acknowledgments with NO line items.
 -- Financial fields: total_amount_owed, amount_received, outstanding_balance
 -- Arithmetic is separate from invoices: outstanding_balance = total_amount_owed - amount_received
@@ -116,13 +117,19 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-CREATE TRIGGER "Receipt_updatedAt"
-  BEFORE UPDATE ON "Receipt"
-  FOR EACH ROW EXECUTE FUNCTION update_receipt_updated_at();
+DO $$ BEGIN
+  CREATE TRIGGER "Receipt_updatedAt"
+    BEFORE UPDATE ON "Receipt"
+    FOR EACH ROW EXECUTE FUNCTION update_receipt_updated_at();
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
 
-CREATE TRIGGER "ReceiptPayment_updatedAt"
-  BEFORE UPDATE ON "ReceiptPayment"
-  FOR EACH ROW EXECUTE FUNCTION update_receipt_updated_at();
+DO $$ BEGIN
+  CREATE TRIGGER "ReceiptPayment_updatedAt"
+    BEFORE UPDATE ON "ReceiptPayment"
+    FOR EACH ROW EXECUTE FUNCTION update_receipt_updated_at();
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
 
 -- =============================================================================
 -- Indexes
@@ -141,6 +148,8 @@ CREATE INDEX IF NOT EXISTS "ReceiptPayment_receiptId_idx" ON "ReceiptPayment"("r
 -- =============================================================================
 -- RPC: Atomic payment creation for receipts
 -- =============================================================================
+DROP FUNCTION IF EXISTS create_receipt_payment_if_unpaid(text, text, text, text, numeric);
+
 CREATE OR REPLACE FUNCTION create_receipt_payment_if_unpaid(
   p_payment_id TEXT,
   p_receipt_id TEXT,

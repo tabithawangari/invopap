@@ -26,6 +26,8 @@ import { isMpesaEnabled } from "@/lib/env";
 import { checkRateLimit, paymentLimiter } from "@/lib/rate-limit";
 import { createRequestLogger } from "@/lib/logger";
 
+export const maxDuration = 60; // Allow up to 60s for M-Pesa STK Push (includes token fetch + retries)
+
 const DOWNLOAD_PRICE = 10; // KSh 10
 
 // Helper: resolve document by type and publicId
@@ -185,9 +187,47 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    logger.error("payment_initiate_error", {
-      error: error instanceof Error ? error.message : "Unknown error",
-    });
+    const errMsg = error instanceof Error ? error.message : "Unknown error";
+
+    logger.error("payment_initiate_error", { error: errMsg });
+
+    // Phone number validation errors → 400
+    if (errMsg.includes("Invalid phone number")) {
+      return NextResponse.json(
+        { error: "Invalid phone number format. Use 07XX, 01XX, or 254XX format." },
+        { status: 400 }
+      );
+    }
+
+    // M-Pesa timeout or network errors → 504
+    if (
+      errMsg.includes("aborted") ||
+      errMsg.includes("TimeoutError") ||
+      errMsg.includes("ETIMEDOUT") ||
+      errMsg.includes("fetch failed")
+    ) {
+      return NextResponse.json(
+        { error: "M-Pesa service timed out. Please try again." },
+        { status: 504 }
+      );
+    }
+
+    // M-Pesa API errors → 502
+    if (errMsg.includes("STK Push failed") || errMsg.includes("STK Push rejected")) {
+      return NextResponse.json(
+        { error: "M-Pesa service error. Please try again shortly." },
+        { status: 502 }
+      );
+    }
+
+    // M-Pesa credentials not configured → 503
+    if (errMsg.includes("not configured")) {
+      return NextResponse.json(
+        { error: "Payment system not configured" },
+        { status: 503 }
+      );
+    }
+
     return NextResponse.json(
       { error: "Failed to initiate payment" },
       { status: 500 }
